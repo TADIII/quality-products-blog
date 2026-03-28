@@ -20,8 +20,8 @@ model Site {
   logo        String?
   
   // Branding
-  primaryColor    String @default("#b7004f")
-  secondaryColor  String @default("#5f5c6f")
+  primaryColor    String @default("#1c1c9b")
+  secondaryColor  String @default("#AA0703")
   
   // SEO
   metaTitle       String?
@@ -71,7 +71,7 @@ model Category {
   name        String
   slug        String
   description String?
-  color       String @default("#b7004f") // Badge color
+  color       String @default("#1c1c9b")
   
   siteId      String
   site        Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
@@ -102,7 +102,7 @@ model Post {
   title       String
   slug        String
   excerpt     String?
-  content     String   // MDX or HTML content
+  content     String
   
   // Media
   imageUrl    String
@@ -118,10 +118,10 @@ model Post {
   publishedAt     DateTime?
   
   // Affiliate tracking
-  affiliateLinks  String?  // JSON array of affiliate links
+  affiliateLinks  String?
   
   // Layout options
-  layout      String   @default("default") // default, fullwidth, sidebar-left
+  layout      String   @default("default")
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -136,66 +136,4 @@ model Post {
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   
-  tags        PostTag[]
-  
-  @@unique([siteId, slug])
-}
-
-model PostTag {
-  postId    String
-  tagId     String
-  
-  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  tag       Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  
-  @@id([postId, tagId])
-}
-
-// Static pages (About, Privacy Policy, etc.)
-model Page {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String
-  content     String
-  
-  // SEO
-  metaTitle       String?
-  metaDescription String?
-  
-  published       Boolean  @default(false)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  siteId      String
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  
-  @@unique([siteId, slug])
-}
-
-// Navigation menus
-model Menu {
-  id          String   @id @default(cuid())
-  name        String   // e.g., "header", "footer"
-  items       String   // JSON array of menu items
-  
-  siteId      String
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@unique([siteId, name])
-}
-
-// Site-wide settings (key-value store)
-model SiteSetting {
-  id          String   @id @default(cuid())
-  key         String
-  value       String
-  
-  siteId      String
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  
-  @@unique([siteId, key])
-}
+  tags        PostTag
