@@ -1,0 +1,35 @@
+# Render Blueprint for Quality Products Blog
+# https://render.com/docs/blueprint-spec
+
+services:
+  # Web Service
+  - type: web
+    name: quality-products-blog
+    runtime: node
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: bun install && bun run db:generate && bun run build
+    startCommand: bun run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quality-products-db
+          property: connectionString
+
+  # PostgreSQL Database (optional - use if migrating from SQLite)
+  # - type: pserv
+  #   name: quality-products-db
+  #   runtime: postgres
+  #   plan: free
+  #   region: oregon
+  #   user: qualityproducts
+  #   databaseName: qualityproducts
+
+databases:
+  - name: quality-products-db
+    region: oregon
+    plan: free
