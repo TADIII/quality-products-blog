@@ -136,4 +136,62 @@ model Post {
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
   
-  tags        PostTag
+  tags        PostTag[]
+  
+  @@unique([siteId, slug])
+}
+
+model PostTag {
+  postId    String
+  tagId     String
+  
+  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag       Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@id([postId, tagId])
+}
+
+model Page {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  content     String
+  
+  metaTitle       String?
+  metaDescription String?
+  
+  published       Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  @@unique([siteId, slug])
+}
+
+model Menu {
+  id          String   @id @default(cuid())
+  name        String
+  items       String
+  
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([siteId, name])
+}
+
+model SiteSetting {
+  id          String   @id @default(cuid())
+  key         String
+  value       String
+  
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  @@unique([siteId, key])
+}
