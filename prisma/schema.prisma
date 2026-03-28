@@ -1,14 +1,13 @@
 // Multi-site Affiliate Blog CMS Schema
-// Supports multiple sites from a single database
+// PostgreSQL for production (Vercel, Railway, etc.)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // Multi-site support - each site can have its own branding and content
@@ -64,6 +63,8 @@ model Author {
   updatedAt DateTime @updatedAt
   
   posts     Post[]
+  
+  @@index([siteId])
 }
 
 model Category {
@@ -82,6 +83,8 @@ model Category {
   posts       Post[]
   
   @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([slug])
 }
 
 model Tag {
@@ -95,14 +98,15 @@ model Tag {
   posts       PostTag[]
   
   @@unique([slug])
+  @@index([slug])
 }
 
 model Post {
   id          String   @id @default(cuid())
   title       String
   slug        String
-  excerpt     String?
-  content     String
+  excerpt     String?  @db.Text
+  content     String   @db.Text
   
   // Media
   imageUrl    String
@@ -118,7 +122,7 @@ model Post {
   publishedAt     DateTime?
   
   // Affiliate tracking
-  affiliateLinks  String?
+  affiliateLinks  String?  @db.Text
   
   // Layout options
   layout      String   @default("default")
@@ -139,6 +143,12 @@ model Post {
   tags        PostTag[]
   
   @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([slug])
+  @@index([published])
+  @@index([publishedAt])
+  @@index([categoryId])
+  @@index([authorId])
 }
 
 model PostTag {
@@ -149,14 +159,18 @@ model PostTag {
   tag       Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
   
   @@id([postId, tagId])
+  @@index([postId])
+  @@index([tagId])
 }
 
+// Static pages (About, Privacy Policy, etc.)
 model Page {
   id          String   @id @default(cuid())
   title       String
   slug        String
-  content     String
+  content     String   @db.Text
   
+  // SEO
   metaTitle       String?
   metaDescription String?
   
@@ -169,12 +183,15 @@ model Page {
   site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
   
   @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([slug])
 }
 
+// Navigation menus
 model Menu {
   id          String   @id @default(cuid())
   name        String
-  items       String
+  items       String   @db.Text
   
   siteId      String
   site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
@@ -183,15 +200,18 @@ model Menu {
   updatedAt   DateTime @updatedAt
   
   @@unique([siteId, name])
+  @@index([siteId])
 }
 
+// Site-wide settings (key-value store)
 model SiteSetting {
   id          String   @id @default(cuid())
   key         String
-  value       String
+  value       String   @db.Text
   
   siteId      String
   site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
   
   @@unique([siteId, key])
+  @@index([siteId])
 }
