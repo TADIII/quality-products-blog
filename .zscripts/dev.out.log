@@ -5876,3 +5876,48 @@ prisma:query SELECT `main`.`Post`.`id`, `main`.`Post`.`title`, `main`.`Post`.`sl
 prisma:query SELECT `main`.`Author`.`id`, `main`.`Author`.`name`, `main`.`Author`.`email`, `main`.`Author`.`avatar`, `main`.`Author`.`bio`, `main`.`Author`.`website`, `main`.`Author`.`twitter`, `main`.`Author`.`facebook`, `main`.`Author`.`siteId`, `main`.`Author`.`createdAt`, `main`.`Author`.`updatedAt` FROM `main`.`Author` WHERE `main`.`Author`.`id` IN (?) LIMIT ? OFFSET ?
 prisma:query SELECT `main`.`Category`.`id`, `main`.`Category`.`name`, `main`.`Category`.`slug`, `main`.`Category`.`description`, `main`.`Category`.`color`, `main`.`Category`.`siteId`, `main`.`Category`.`createdAt`, `main`.`Category`.`updatedAt` FROM `main`.`Category` WHERE `main`.`Category`.`id` IN (?,?,?,?) LIMIT ? OFFSET ?
  GET / 200 in 42ms (compile: 7ms, render: 35ms)
+==========================================
+[2026-03-29 07:44:09] Starting: bun install
+==========================================
+[BUN] Installing dependencies...
+[0.02ms] ".env"
+bun install v1.3.10 (30e609e0)
+
+$ prisma generate
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v6.19.2) to ./node_modules/@prisma/client in 84ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+
+
+Checked 846 installs across 915 packages (no changes) [957.00ms]
+==========================================
+[2026-03-29 07:44:10] Completed: bun install
+[LOG] Step: bun install | Duration: 1s
+==========================================
+
+==========================================
+[2026-03-29 07:44:10] Starting: bun run db:push
+==========================================
+[BUN] Setting up database...
+$ prisma db push
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Error: Prisma schema validation - (get-config wasm)
+Error code: P1012
+error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
+  -->  prisma/schema.prisma:10
+   | 
+ 9 |   provider = "postgresql"
+10 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+[Context: getConfig]
+
+Prisma CLI Version : 6.19.2
+error: script "db:push" exited with code 1

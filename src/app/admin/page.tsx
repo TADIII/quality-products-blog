@@ -1,102 +1,196 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, FolderOpen, Users, Eye, Plus } from 'lucide-react'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  FileText,
+  FolderTree,
+  Users,
+  Layout,
+  Settings,
+  AlertCircle,
+  Database,
+} from 'lucide-react'
+import { SeedButton } from './seed-button'
 
 export default async function AdminDashboard() {
-  const site = await db.site.findFirst()
-  
-  const [postsCount, categoriesCount, authorsCount, publishedCount] = await Promise.all([
-    db.post.count({ where: { siteId: site?.id } }),
-    db.category.count({ where: { siteId: site?.id } }),
-    db.author.count({ where: { siteId: site?.id } }),
-    db.post.count({ where: { siteId: site?.id, published: true } }),
+  // Get counts
+  const [site, postsCount, categoriesCount, authorsCount] = await Promise.all([
+    db.site.findFirst(),
+    db.post.count(),
+    db.category.count(),
+    db.author.count(),
   ])
 
-  const recentPosts = await db.post.findMany({
-    where: { siteId: site?.id },
-    include: { category: true },
-    orderBy: { createdAt: 'desc' },
-    take: 5,
-  })
-
-  const stats = [
-    { name: 'Total Posts', value: postsCount, icon: FileText, color: 'text-blue-500' },
-    { name: 'Categories', value: categoriesCount, icon: FolderOpen, color: 'text-green-500' },
-    { name: 'Authors', value: authorsCount, icon: Users, color: 'text-purple-500' },
-    { name: 'Published', value: publishedCount, icon: Eye, color: 'text-orange-500' },
-  ]
+  const isSeeded = !!site && authorsCount > 0 && categoriesCount > 0
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Welcome to your multi-site CMS admin panel
-          </p>
-        </div>
-        <Link href="/admin/posts/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Post
-          </Button>
-        </Link>
+      <div>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground mt-1">
+          Welcome to your CMS dashboard
+        </p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.name}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.name}
-              </CardTitle>
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{stat.value}</p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Setup Warning */}
+      {!isSeeded && (
+        <Card className="border-amber-500 bg-amber-50 dark:bg-amber-950">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+              <AlertCircle className="h-5 w-5" />
+              Database Setup Required
+            </CardTitle>
+            <CardDescription className="text-amber-600 dark:text-amber-300">
+              Your database needs to be seeded before you can create posts.
+              {!site && " No site found."}
+              {site && authorsCount === 0 && " No authors found."}
+              {site && categoriesCount === 0 && " No categories found."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SeedButton />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{postsCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Blog posts created
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Categories</CardTitle>
+            <FolderTree className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{categoriesCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Content categories
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Authors</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{authorsCount}</div>
+            <p className="text-xs text-muted-foreground">
+              Content creators
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Site Status</CardTitle>
+            <Layout className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {site ? 'Active' : 'Setup'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {site ? site.name : 'Needs configuration'}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Recent Posts */}
+      {/* Quick Actions */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Posts</CardTitle>
-          <Link href="/admin/posts">
-            <Button variant="ghost" size="sm">View All</Button>
-          </Link>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>
+            Common tasks you can perform
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {recentPosts.map((post) => (
-              <div
-                key={post.id}
-                className="flex items-center justify-between py-3 border-b last:border-0"
-              >
-                <div>
-                  <h4 className="font-medium">{post.title}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {post.category.name} • {post.published ? 'Published' : 'Draft'}
-                  </p>
-                </div>
-                <Link href={`/admin/posts/${post.id}`}>
-                  <Button variant="ghost" size="sm">Edit</Button>
-                </Link>
-              </div>
-            ))}
-            {recentPosts.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                No posts yet. Create your first post!
-              </p>
-            )}
+          <div className="flex flex-wrap gap-4">
+            <Link href="/admin/posts/new">
+              <Button>Create New Post</Button>
+            </Link>
+            <Link href="/admin/categories">
+              <Button variant="outline">Manage Categories</Button>
+            </Link>
+            <Link href="/admin/sites">
+              <Button variant="outline">Site Settings</Button>
+            </Link>
+            <SeedButton variant="outline" />
           </div>
         </CardContent>
       </Card>
+
+      {/* Site Info */}
+      {site && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Site Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium">Name</TableCell>
+                  <TableCell>{site.name}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Description</TableCell>
+                  <TableCell>{site.description}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Primary Color</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-4 h-4 rounded"
+                        style={{ backgroundColor: site.primaryColor }}
+                      />
+                      {site.primaryColor}
+                    </div>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Secondary Color</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-4 h-4 rounded"
+                        style={{ backgroundColor: site.secondaryColor }}
+                      />
+                      {site.secondaryColor}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
