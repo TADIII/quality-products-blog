@@ -1,0 +1,217 @@
+// Multi-site Affiliate Blog CMS Schema
+// PostgreSQL for production (Vercel, Railway, etc.)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Multi-site support - each site can have its own branding and content
+model Site {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  domain      String?  @unique
+  description String
+  logo        String?
+  
+  // Branding
+  primaryColor    String @default("#1c1c9b")
+  secondaryColor  String @default("#AA0703")
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  // Social links
+  facebook   String?
+  twitter    String?
+  instagram  String?
+  linkedin   String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  authors     Author[]
+  categories  Category[]
+  posts       Post[]
+  pages       Page[]
+  menus       Menu[]
+  settings    SiteSetting[]
+}
+
+model Author {
+  id        String @id @default(cuid())
+  name      String
+  email     String?
+  avatar    String?
+  bio       String?
+  website   String?
+  
+  // Social profiles
+  twitter   String?
+  facebook  String?
+  
+  siteId    String
+  site      Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  posts     Post[]
+  
+  @@index([siteId])
+}
+
+model Category {
+  id          String @id @default(cuid())
+  name        String
+  slug        String
+  description String?
+  color       String @default("#1c1c9b")
+  
+  siteId      String
+  site        Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  posts       Post[]
+  
+  @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([slug])
+}
+
+model Tag {
+  id          String @id @default(cuid())
+  name        String
+  slug        String
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  posts       PostTag[]
+  
+  @@unique([slug])
+  @@index([slug])
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  excerpt     String?  @db.Text
+  content     String   @db.Text
+  
+  // Media
+  imageUrl    String
+  imageAlt    String?
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  // Status
+  published       Boolean  @default(false)
+  featured        Boolean  @default(false)
+  publishedAt     DateTime?
+  
+  // Affiliate tracking
+  affiliateLinks  String?  @db.Text
+  
+  // Layout options
+  layout      String   @default("default")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  authorId    String
+  author      Author   @relation(fields: [authorId], references: [id])
+  
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  
+  tags        PostTag[]
+  
+  @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([slug])
+  @@index([published])
+  @@index([publishedAt])
+  @@index([categoryId])
+  @@index([authorId])
+}
+
+model PostTag {
+  postId    String
+  tagId     String
+  
+  post      Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag       Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@id([postId, tagId])
+  @@index([postId])
+  @@index([tagId])
+}
+
+// Static pages (About, Privacy Policy, etc.)
+model Page {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  content     String   @db.Text
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  published       Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  @@unique([siteId, slug])
+  @@index([siteId])
+  @@index([slug])
+}
+
+// Navigation menus
+model Menu {
+  id          String   @id @default(cuid())
+  name        String
+  items       String   @db.Text
+  
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([siteId, name])
+  @@index([siteId])
+}
+
+// Site-wide settings (key-value store)
+model SiteSetting {
+  id          String   @id @default(cuid())
+  key         String
+  value       String   @db.Text
+  
+  siteId      String
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  
+  @@unique([siteId, key])
+  @@index([siteId])
+}
